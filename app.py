@@ -1,23 +1,36 @@
+import os
+
+# ========== AUTO-DOWNLOAD MODEL FROM GOOGLE DRIVE ==========
+GDRIVE_FILE_ID = "1XKHJubHZ_o3O_9CufXov267GOXw6EwVf"  # <-- PASTE YOUR FILE ID HERE
+
+if not os.path.exists("best.pt"):
+    import gdown
+    url = f"https://drive.google.com/uc?id={GDRIVE_FILE_ID}"
+    gdown.download(url, "best.pt", quiet=False)
+    print(f"✅ Model downloaded: {os.path.getsize('best.pt')} bytes")
+else:
+    print(f"✅ Model exists: {os.path.getsize('best.pt')} bytes")
+# ===========================================================
+
 import streamlit as st
 import cv2
 import numpy as np
 from PIL import Image
-import os
 import tempfile
 import subprocess
 import io
 import base64
 import torch
 
-# ========== PYTORCH 2.6 FIX ==========
+# Monkey patch for PyTorch 2.6
 _original_load = torch.load
 def _patched_load(*args, **kwargs):
     kwargs['weights_only'] = False
     return _original_load(*args, **kwargs)
 torch.load = _patched_load
-# =====================================
 
 from ultralytics import YOLO
+# ... rest of your code
 # ... rest of your code stays exactly the same
 # ==================== PAGE CONFIG ====================
 st.set_page_config(
