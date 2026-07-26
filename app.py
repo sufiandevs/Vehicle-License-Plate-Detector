@@ -1,7 +1,7 @@
 import os
 
 # ========== AUTO-DOWNLOAD MODEL FROM GOOGLE DRIVE ==========
-GDRIVE_FILE_ID = "1XKHJubHZ_o3O_9CufXov267GOXw6EwVf  # <-- PASTE YOUR FILE ID HERE
+GDRIVE_FILE_ID = "1XKHJubHZ_o3O_9CufXov267GOXw6EwVf"  # <-- PASTE YOUR FILE ID HERE
 
 if not os.path.exists("best.pt"):
     import gdown
