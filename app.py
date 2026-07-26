@@ -1,15 +1,12 @@
 import os
 
 # ========== AUTO-DOWNLOAD MODEL FROM GOOGLE DRIVE ==========
-GDRIVE_FILE_ID = "1XKHJubHZ_o3O_9CufXov267GOXw6EwVf"  # <-- PASTE YOUR FILE ID HERE
+GDRIVE_FILE_ID = "1XKHJubHZ_o3O_9CufXov267GOXw6EwVf  # <-- PASTE YOUR FILE ID HERE
 
 if not os.path.exists("best.pt"):
     import gdown
     url = f"https://drive.google.com/uc?id={GDRIVE_FILE_ID}"
     gdown.download(url, "best.pt", quiet=False)
-    print(f"✅ Model downloaded: {os.path.getsize('best.pt')} bytes")
-else:
-    print(f"✅ Model exists: {os.path.getsize('best.pt')} bytes")
 # ===========================================================
 
 import streamlit as st
@@ -36,178 +33,198 @@ from ultralytics import YOLO
 st.set_page_config(
     page_title="Vehicle Number Plate Detector",
     page_icon="🚗",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="centered",
+    initial_sidebar_state="collapsed"
 )
 
-# ==================== CUSTOM CSS ====================
+# ==================== CUSTOM CSS (MATCHING SCREENSHOT STYLE) ====================
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
+/* Animated Background: Black → Navy → Light Blue */
 .stApp {
-    background: linear-gradient(-45deg, #050505, #0f0c29, #1a1a2e, #16213e, #0f3460, #1a1a2e, #050505);
-    background-size: 700% 700%;
-    animation: bgShift 25s ease infinite;
+    background: linear-gradient(-45deg, #000000, #0a1628, #1e3a5f, #4a90e2, #0a1628, #000000);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+    font-family: 'Inter', sans-serif;
 }
-@keyframes bgShift {
+
+@keyframes gradientShift {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
 }
 
-.title-3d {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 3.8rem;
-    font-weight: 900;
-    text-align: center;
-    text-transform: uppercase;
-    letter-spacing: 6px;
-    background: linear-gradient(180deg, #00f2fe 0%, #4facfe 50%, #00c6ff 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
-    text-shadow: 0 1px 0 #ccc, 0 2px 0 #c9c9c9, 0 3px 0 #bbb, 0 4px 0 #b9b9b9, 0 5px 0 #aaa, 0 6px 1px rgba(0,0,0,.1), 0 0 5px rgba(0,0,0,.1), 0 1px 3px rgba(0,0,0,.3), 0 3px 5px rgba(0,0,0,.2), 0 5px 10px rgba(0,0,0,.25), 0 10px 10px rgba(0,0,0,.2), 0 20px 20px rgba(0,0,0,.15), 0 0 30px rgba(0, 242, 254, 0.4), 0 0 60px rgba(79, 172, 254, 0.2);
-    animation: titleFloat 5s ease-in-out infinite, titleGlow 3s ease-in-out infinite alternate;
-    transform-style: preserve-3d;
-    perspective: 1000px;
-    margin-top: 20px;
-    margin-bottom: 5px;
-}
-@keyframes titleFloat {
-    0%, 100% { transform: translateY(0px) rotateX(0deg) rotateY(0deg); }
-    25% { transform: translateY(-10px) rotateX(3deg) rotateY(-3deg); }
-    50% { transform: translateY(-18px) rotateX(0deg) rotateY(0deg); }
-    75% { transform: translateY(-10px) rotateX(-3deg) rotateY(3deg); }
-}
-@keyframes titleGlow {
-    0% { filter: brightness(1) drop-shadow(0 0 20px rgba(0,242,254,0.3)); }
-    100% { filter: brightness(1.4) drop-shadow(0 0 50px rgba(0,242,254,0.7)); }
-}
-
-.subtitle-3d {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1.6rem;
-    font-weight: 700;
-    text-align: center;
-    color: #8899ac;
-    letter-spacing: 10px;
-    text-transform: uppercase;
-    animation: subtitlePulse 3s ease-in-out infinite;
-    margin-bottom: 50px;
-}
-@keyframes subtitlePulse {
-    0%, 100% { opacity: 0.5; letter-spacing: 10px; text-shadow: 0 0 10px rgba(79,172,254,0); }
-    50% { opacity: 1; letter-spacing: 14px; color: #4facfe; text-shadow: 0 0 20px rgba(79,172,254,0.5); }
-}
-
-.glass-box {
-    background: rgba(255, 255, 255, 0.02);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 30px;
-    padding: 40px 50px;
-    box-shadow: 0 8px 40px 0 rgba(0, 0, 0, 0.5), inset 0 0 30px rgba(255, 255, 255, 0.03);
-    animation: boxFloat 8s ease-in-out infinite;
-    max-width: 900px;
+/* Main Container */
+.main-container {
+    max-width: 800px;
     margin: 0 auto;
-}
-@keyframes boxFloat {
-    0%, 100% { transform: translateY(0px); box-shadow: 0 8px 40px rgba(0,0,0,0.5); }
-    50% { transform: translateY(-8px); box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(0,242,254,0.05); }
+    padding: 20px;
 }
 
-.detect-btn-container { text-align: center; margin-top: 30px; }
-.detect-btn-container button {
-    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%) !important;
-    color: #000 !important;
-    font-family: 'Orbitron', sans-serif !important;
-    font-size: 1.1rem !important;
-    font-weight: 900 !important;
-    padding: 16px 50px !important;
-    border: none !important;
-    border-radius: 50px !important;
-    letter-spacing: 3px !important;
-    text-transform: uppercase !important;
-    box-shadow: 0 0 25px rgba(0, 242, 254, 0.4), inset 0 0 10px rgba(255,255,255,0.3) !important;
-    transition: all 0.3s ease !important;
-    animation: btnPulse 2.5s infinite;
+/* Title Section */
+.title-section {
+    text-align: center;
+    margin-bottom: 10px;
+    margin-top: 30px;
 }
-.detect-btn-container button:hover {
-    transform: translateY(-3px) scale(1.08) !important;
-    box-shadow: 0 0 50px rgba(0, 242, 254, 0.8), inset 0 0 20px rgba(255,255,255,0.5) !important;
+.main-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
 }
-@keyframes btnPulse {
-    0%, 100% { box-shadow: 0 0 25px rgba(0,242,254,0.4); }
-    50% { box-shadow: 0 0 50px rgba(0,242,254,0.8); }
+.sub-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 400;
+    color: #8ba4be;
+    letter-spacing: 0.5px;
 }
 
-.result-glass {
-    background: rgba(0, 0, 0, 0.35);
+/* Glass Cards (like screenshot) */
+.glass-card {
+    background: rgba(20, 30, 48, 0.6);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(0, 242, 254, 0.25);
-    border-radius: 24px;
-    padding: 35px;
-    margin-top: 40px;
-    animation: resultSlide 1s ease-out, resultGlow 4s ease-in-out infinite alternate;
-    box-shadow: 0 0 40px rgba(0, 242, 254, 0.08);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-@keyframes resultSlide {
-    from { opacity: 0; transform: translateY(40px) scale(0.95); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-}
-@keyframes resultGlow {
-    from { box-shadow: 0 0 40px rgba(0,242,254,0.05); border-color: rgba(0,242,254,0.2); }
-    to { box-shadow: 0 0 60px rgba(0,242,254,0.15); border-color: rgba(0,242,254,0.4); }
+.glass-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
+/* Upload Zone */
+.upload-zone {
+    background: rgba(10, 15, 25, 0.5);
+    border: 2px dashed rgba(74, 144, 226, 0.3);
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+.upload-zone:hover {
+    border-color: rgba(74, 144, 226, 0.6);
+    background: rgba(10, 15, 25, 0.7);
+}
+
+/* Section Headers */
+.section-header {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.section-desc {
+    font-size: 0.9rem;
+    color: #8ba4be;
+    margin-bottom: 16px;
+}
+
+/* Detect Button */
+.detect-btn {
+    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 14px 40px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+    letter-spacing: 0.5px;
+}
+.detect-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(74, 144, 226, 0.5);
+    background: linear-gradient(135deg, #5a9ff2 0%, #4a90e2 100%);
+}
+
+/* Status Box (like screenshot blue info box) */
+.status-box {
+    background: rgba(74, 144, 226, 0.15);
+    border: 1px solid rgba(74, 144, 226, 0.3);
+    border-radius: 10px;
+    padding: 14px 18px;
+    color: #8fc1ff;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+/* Progress Bar */
+.stProgress > div > div {
+    background: linear-gradient(90deg, #4a90e2, #63b3ed) !important;
+    border-radius: 10px;
+}
+
+/* Result Card */
+.result-card {
+    background: rgba(20, 30, 48, 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(74, 144, 226, 0.2);
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 24px;
+    animation: fadeInUp 0.6s ease-out;
+}
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Download Button */
 .download-btn {
-    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-    color: #000;
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 900;
-    padding: 14px 35px;
-    border-radius: 30px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 12px 28px;
+    border-radius: 10px;
     border: none;
     cursor: pointer;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    font-size: 0.95rem;
-    box-shadow: 0 0 20px rgba(56, 239, 125, 0.4);
-    transition: all 0.3s;
-    margin-top: 20px;
-    display: inline-block;
     text-decoration: none;
+    margin-top: 16px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
 }
 .download-btn:hover {
-    transform: scale(1.08);
-    box-shadow: 0 0 40px rgba(56, 239, 125, 0.8);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(16, 185, 129, 0.5);
 }
 
+/* Spinner text */
 .processing-text {
-    font-family: 'Orbitron', sans-serif;
-    color: #00f2fe;
-    font-size: 1.1rem;
+    color: #8fc1ff;
+    font-size: 0.95rem;
     text-align: center;
-    animation: textFlicker 1.5s infinite;
-    text-shadow: 0 0 10px rgba(0,242,254,0.5);
-}
-@keyframes textFlicker {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
+    font-weight: 500;
 }
 
-.css-1d391kg, section[data-testid="stSidebar"] {
-    background: rgba(5, 5, 5, 0.85) !important;
-    backdrop-filter: blur(15px);
-    border-right: 1px solid rgba(0,242,254,0.1);
-}
-
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-header {visibility: hidden;}
-.stDeployButton {display: none;}
+/* Hide Streamlit branding */
+#MainMenu, footer, header, .stDeployButton {display: none !important;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -276,7 +293,8 @@ def process_image(img, model):
     
     return annotated
 
-def process_video(uploaded_file, model, status_text):
+def process_video(uploaded_file, model, progress_bar, status_text):
+    # Save uploaded file
     tfile = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4')
     tfile.write(uploaded_file.read())
     tfile.close()
@@ -286,6 +304,11 @@ def process_video(uploaded_file, model, status_text):
     w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    
+    # For faster inference, scale down to max 640 width
+    scale = min(1.0, 640 / w)
+    infer_w = int(w * scale)
+    infer_h = int(h * scale)
     
     out_raw = tempfile.mktemp(suffix='.mp4')
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -300,11 +323,17 @@ def process_video(uploaded_file, model, status_text):
         frame_count += 1
         orig = frame.copy()
         
-        results = model(frame, verbose=False)[0]
+        # Resize for faster inference
+        small = cv2.resize(frame, (infer_w, infer_h))
+        results = model(small, verbose=False)[0]
+        
         detections = []
         for box in results.boxes:
             x1, y1, x2, y2 = map(int, box.xyxy[0].cpu().numpy())
             conf = float(box.conf[0])
+            # Scale back to original resolution
+            x1, y1 = int(x1 / scale), int(y1 / scale)
+            x2, y2 = int(x2 / scale), int(y2 / scale)
             x1, y1 = max(0, x1), max(0, y1)
             x2, y2 = min(w, x2), min(h, y2)
             if x2 > x1 and y2 > y1 and (x2 - x1) > 15 and (y2 - y1) > 15:
@@ -355,20 +384,18 @@ def process_video(uploaded_file, model, status_text):
         
         writer.write(frame)
         
-        if frame_count % 5 == 0 or frame_count == total:
-            status_text.markdown(
-                f'<div class="processing-text">⏳ Processing {frame_count}/{total} frames... Please wait.</div>',
-                unsafe_allow_html=True
-            )
+        # Update progress every frame
+        progress = min(frame_count / total, 1.0) if total > 0 else 0
+        progress_bar.progress(progress, text=f"Processing frame {frame_count}/{total}")
+        
+        if frame_count % 30 == 0:
+            status_text.markdown(f'<div class="processing-text">⏳ Processed {frame_count} of {total} frames...</div>', unsafe_allow_html=True)
     
     cap.release()
     writer.release()
     os.remove(tfile.name)
     
-    status_text.markdown(
-        f'<div class="processing-text">✅ Processed {frame_count} frames. Converting to browser-compatible MP4...</div>',
-        unsafe_allow_html=True
-    )
+    status_text.markdown('<div class="processing-text">🎬 Converting to MP4 format...</div>', unsafe_allow_html=True)
     
     final_path = tempfile.mktemp(suffix='.mp4')
     cmd = [
@@ -385,71 +412,76 @@ def process_video(uploaded_file, model, status_text):
     
     return final_path
 
-# ==================== SIDEBAR ====================
-with st.sidebar:
-    st.markdown('<h2 style="font-family:Orbitron; color:#00f2fe; text-align:center;">⚙️ CONFIG</h2>', unsafe_allow_html=True)
-    st.markdown('<hr style="border-color:rgba(0,242,254,0.2);">', unsafe_allow_html=True)
+# ==================== UI STARTS HERE ====================
+
+st.markdown('<div class="main-container">', unsafe_allow_html=True)
+
+# Title Section
+st.markdown('''
+    <div class="title-section">
+        <div class="main-title">🚗 Vehicle Number Plate Detector</div>
+        <div class="sub-title">CNN Architecture Used YOLOv8</div>
+    </div>
+''', unsafe_allow_html=True)
+
+# Model Status Card
+st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+if os.path.exists("best.pt") and os.path.getsize("best.pt") > 1_000_000:
+    st.success(f"✅ Model loaded: **best.pt** ({os.path.getsize('best.pt')/1024/1024:.1f} MB)")
+    model_path = "best.pt"
+else:
+    if os.path.exists("best.pt"):
+        st.warning(f"⚠️ File too small ({os.path.getsize('best.pt')} bytes) — likely corrupted.")
+    else:
+        st.info("📦 Please upload your trained model file.")
     
-    if os.path.exists("best.pt") and os.path.getsize("best.pt") > 1_000_000:
-        st.success(f"✅ Model ready: **best.pt** ({os.path.getsize('best.pt')/1024/1024:.1f} MB)")
+    model_file = st.file_uploader("Drop **best.pt** here", type=["pt"])
+    if model_file:
+        with open("best.pt", "wb") as f:
+            f.write(model_file.getbuffer())
+        st.success(f"✅ Model uploaded! ({os.path.getsize('best.pt')/1024/1024:.1f} MB)")
         model_path = "best.pt"
     else:
-        if os.path.exists("best.pt"):
-            st.warning(f"⚠️ File found but only {os.path.getsize('best.pt')} bytes — likely a Git LFS pointer. Please upload the real model.")
-        else:
-            st.warning("📦 Model not found. Upload your trained model.")
-        
-        model_file = st.file_uploader("Drop **best.pt** here", type=["pt"])
-        if model_file:
-            with open("best.pt", "wb") as f:
-                f.write(model_file.getbuffer())
-            st.success(f"✅ Model uploaded! ({os.path.getsize('best.pt')/1024/1024:.1f} MB)")
-            model_path = "best.pt"
-        else:
-            st.error("❌ Please upload **best.pt** to continue")
-            st.stop()
+        st.error("❌ Please upload **best.pt** to continue")
+        st.stop()
+st.markdown('</div>', unsafe_allow_html=True)
 
-# ==================== MAIN UI ====================
-st.markdown('<div class="title-3d">Vehicles Number Plate Detector</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle-3d">CNN Architecture Used YOLOv8</div>', unsafe_allow_html=True)
+# Upload Card
+st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+st.markdown('<div class="section-header">📤 Upload Media</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-desc">Select input type and upload your file for detection.</div>', unsafe_allow_html=True)
 
-st.markdown('<div class="glass-box">', unsafe_allow_html=True)
-
-input_type = st.selectbox(
-    "📂 SELECT INPUT TYPE",
-    ["Image", "Video"],
-    help="Choose whether to upload an image or a video file"
-)
+input_type = st.selectbox("Input Type", ["Image", "Video"], label_visibility="collapsed")
 
 if input_type == "Image":
     uploaded_file = st.file_uploader(
-        "Upload Image",
+        "Upload Image (JPG, PNG, JPEG)",
         type=["jpg", "jpeg", "png"],
-        help="Supported formats: JPG, PNG, JPEG"
+        label_visibility="collapsed"
     )
 else:
     uploaded_file = st.file_uploader(
-        "Upload Video",
+        "Upload Video (MP4, AVI, MOV)",
         type=["mp4", "avi", "mov"],
-        help="Supported formats: MP4, AVI, MOV"
+        label_visibility="collapsed"
     )
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ==================== DETECT BUTTON ====================
+# Detect Button
 detect_clicked = False
 if uploaded_file is not None:
-    st.markdown('<div class="detect-btn-container">', unsafe_allow_html=True)
-    detect_clicked = st.button("🔍 Detect Licence Plates", use_container_width=False)
+    st.markdown('<div class="glass-card" style="padding-top:10px; padding-bottom:10px;">', unsafe_allow_html=True)
+    detect_clicked = st.button("🔍 Detect Licence Plates", use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==================== PROCESSING ====================
 if detect_clicked and uploaded_file:
-    with st.spinner("🚀 Initializing YOLOv8 Neural Network..."):
+    with st.spinner("Initializing YOLOv8..."):
         model = load_model(model_path)
     
     if input_type == "Image":
-        with st.spinner("🔍 Analyzing image..."):
+        with st.spinner("Analyzing image..."):
             file_bytes = uploaded_file.read()
             nparr = np.frombuffer(file_bytes, np.uint8)
             img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
@@ -462,8 +494,8 @@ if detect_clicked and uploaded_file:
         img_bytes = buf.getvalue()
         img_b64 = base64.b64encode(img_bytes).decode()
         
-        st.markdown('<div class="result-glass">', unsafe_allow_html=True)
-        st.markdown('<h3 style="font-family:Orbitron; color:#00f2fe; text-align:center; margin-bottom:20px;">🎯 DETECTION RESULT</h3>', unsafe_allow_html=True)
+        st.markdown('<div class="result-card">', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">🎯 Detection Result</div>', unsafe_allow_html=True)
         st.image(result_img, use_column_width=True)
         
         st.markdown(f'''
@@ -475,20 +507,23 @@ if detect_clicked and uploaded_file:
         ''', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
     
-    else:
+    else:  # VIDEO
+        st.markdown('<div class="result-card">', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">🎬 Processing Video</div>', unsafe_allow_html=True)
+        
+        progress_bar = st.progress(0, text="Starting...")
         status_text = st.empty()
         
-        with st.spinner(""):
-            status_text.markdown('<div class="processing-text">⏳ Processing video... Please wait.</div>', unsafe_allow_html=True)
-            result_path = process_video(uploaded_file, model, status_text)
-            status_text.empty()
+        result_path = process_video(uploaded_file, model, progress_bar, status_text)
+        
+        progress_bar.empty()
+        status_text.empty()
         
         if result_path and os.path.exists(result_path):
             with open(result_path, "rb") as f:
                 video_bytes = f.read()
             
-            st.markdown('<div class="result-glass">', unsafe_allow_html=True)
-            st.markdown('<h3 style="font-family:Orbitron; color:#00f2fe; text-align:center; margin-bottom:20px;">🎬 DETECTION RESULT</h3>', unsafe_allow_html=True)
+            st.markdown('<div class="section-header" style="margin-top:20px;">✅ Detection Result</div>', unsafe_allow_html=True)
             st.video(video_bytes)
             
             vid_b64 = base64.b64encode(video_bytes).decode()
@@ -504,3 +539,6 @@ if detect_clicked and uploaded_file:
             os.remove(result_path)
         else:
             st.error("❌ Video processing failed. Please try again.")
+            st.markdown('</div>', unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
