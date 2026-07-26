@@ -163,10 +163,13 @@ def process_video(video_bytes, model):
     h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     
-    if total > 300:
+    # ========== 32 SECOND LIMIT ==========
+    max_frames = int(fps * 32)
+    if total > max_frames:
         cap.release()
         os.remove(tfile.name)
-        return None, "Video too long. Max 10 seconds allowed."
+        return None, f"Video too long. Max 32 seconds allowed (this video is ~{int(total/fps)}s)."
+    # =====================================
     
     out_raw = tempfile.mktemp(suffix='.mp4')
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -280,14 +283,14 @@ st.markdown('</div>', unsafe_allow_html=True)
 # Upload card
 st.markdown('<div class="glass-card">', unsafe_allow_html=True)
 st.markdown('<div class="section-header">📤 Upload Media</div>', unsafe_allow_html=True)
-st.markdown('<div class="section-desc">Select type and upload. For video, use max 10 seconds to avoid timeout.</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-desc">Select type and upload. For video, use max 32 seconds to avoid timeout.</div>', unsafe_allow_html=True)
 
 input_type = st.selectbox("Input Type", ["Image","Video"], label_visibility="collapsed")
 
 if input_type == "Image":
     uploaded_file = st.file_uploader("Image (JPG, PNG, JPEG)", type=["jpg","jpeg","png"], label_visibility="collapsed")
 else:
-    uploaded_file = st.file_uploader("Video (MP4, AVI, MOV) — max 10 sec", type=["mp4","avi","mov"], label_visibility="collapsed")
+    uploaded_file = st.file_uploader("Video (MP4, AVI, MOV) — max 32 sec", type=["mp4","avi","mov"], label_visibility="collapsed")
 
 st.markdown('</div>', unsafe_allow_html=True)
 
