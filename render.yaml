@@ -1,9 +1,0 @@
-services:
-  - type: web
-    name: vehicle-plate-detector
-    runtime: docker
-    plan: free
-    branch: main
-    envVars:
-      - key: PYTHONUNBUFFERED
-        value: "1"
