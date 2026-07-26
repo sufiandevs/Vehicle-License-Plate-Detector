@@ -7,8 +7,18 @@ import tempfile
 import subprocess
 import io
 import base64
-from ultralytics import YOLO
+import torch
 
+# ========== PYTORCH 2.6 FIX ==========
+_original_load = torch.load
+def _patched_load(*args, **kwargs):
+    kwargs['weights_only'] = False
+    return _original_load(*args, **kwargs)
+torch.load = _patched_load
+# =====================================
+
+from ultralytics import YOLO
+# ... rest of your code stays exactly the same
 # ==================== PAGE CONFIG ====================
 st.set_page_config(
     page_title="Vehicle Number Plate Detector",
